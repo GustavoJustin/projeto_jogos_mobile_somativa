@@ -1,27 +1,21 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native"
 
-export default function ListaItem({ lista, aoAbrir, aoEditar, aoExcluir }) {
-    const quantidade = lista.itens ? lista.itens.length : 0
+export default function ElementoItem({ item, aoExcluir, aoEditar }) {
+    const temNota = item.nota !== null && item.nota !== undefined
 
     return (
         <View style={styles.item}>
             <View style={styles.textoContainer}>
-                <Text style={styles.texto}>{lista.nome}</Text>
-                <Text style={styles.subtexto}>
-                    {quantidade} {quantidade === 1 ? "elemento" : "elementos"}
-                </Text>
+                <Text style={styles.texto}>{item.texto}</Text>
+                {temNota && <Text style={styles.nota}>Nota: {item.nota}</Text>}
             </View>
 
             <View style={styles.botoesContainer}>
-                <TouchableOpacity style={styles.botaoAbrir} onPress={() => aoAbrir(lista.id)}>
-                    <Text style={styles.textoBotaoAbrir}>Abrir</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.botaoEditar} onPress={() => aoEditar(lista)}>
+                <TouchableOpacity style={styles.botaoEditar} onPress={() => aoEditar(item)}>
                     <Text style={styles.textoBotaoEditar}>Editar</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.botaoExcluir} onPress={() => aoExcluir(lista.id)}>
+                <TouchableOpacity style={styles.botaoExcluir} onPress={() => aoExcluir(item.id)}>
                     <Text style={styles.textoBotaoExcluir}>Excluir</Text>
                 </TouchableOpacity>
             </View>
@@ -31,6 +25,9 @@ export default function ListaItem({ lista, aoAbrir, aoEditar, aoExcluir }) {
 
 const styles = StyleSheet.create({
     item: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
         backgroundColor: "#fff",
         borderRadius: 8,
         paddingVertical: 12,
@@ -43,40 +40,26 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     textoContainer: {
-        marginBottom: 10,
+        flex: 1,
+        marginRight: 10,
     },
     texto: {
         fontSize: 16,
-        fontWeight: "bold",
         color: "#222",
     },
-    subtexto: {
+    nota: {
         fontSize: 13,
         color: "#888",
         marginTop: 2,
     },
     botoesContainer: {
         flexDirection: "row",
-        justifyContent: "flex-end",
-    },
-    botaoAbrir: {
-        backgroundColor: "#27ae60",
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 6,
-        marginLeft: 8,
-    },
-    textoBotaoAbrir: {
-        color: "#fff",
-        fontWeight: "bold",
-        fontSize: 12,
     },
     botaoEditar: {
         backgroundColor: "#c8891d",
         paddingVertical: 6,
         paddingHorizontal: 10,
         borderRadius: 6,
-        marginLeft: 8,
     },
     textoBotaoEditar: {
         color: "#fff",

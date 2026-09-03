@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-
 import {
     FlatList,
     KeyboardAvoidingView,
@@ -12,54 +11,53 @@ import {
     View,
 } from "react-native"
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
-const CHAVE_STORAGE = "@projeto_mobile_somativa:listas"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 import ListaItem from "../components/lista_component/ListaItem"
-import FilmesItem from "../components/lista_component/FilmesItem"
-import JogosItem from "../components/lista_component/JogosItem"
+import ElementoItem from "../components/lista_component/ElementoItem"
 
-export default function listaScreen() {
-    //Lista geral
+const CHAVE_STORAGE = "@projeto_mobile_somativa:listas"
+
+export default function ListaScreen() {
+    // Listas: [{ id, nome, itens: [{ id, texto, nota }] }]
     const [listas, setListas] = useState([])
-    const [textoListaInput, setTextoListaInput] = useState("")
-
-    //Lista filme dentro da lista geral
-    const [filmes, setFilmes] = useState([])
-    const [textoFilmeInput, setTextoFilmeInput] = useState("")
-    const [notaFilmeInput, setNotaFilmeInput] = useState()
-
-    //Lista jogo dentro da lista geral
-    const [jogos, setJogos] = useState([])
-    const [textoJogoInput, setTextoJogoInput] = useState("")
-    const [notaJogoInput, setNotaJogoInput] = useState("")
-
-    //carregamento
     const [carregando, setCarregando] = useState(true)
 
-    //Modal
-    const [modalVisivel, setModalVisivel] = useState(false);
+    // Form para criar nova lista
+    const [nomeNovaLista, setNomeNovaLista] = useState("")
 
-    const [listasEmEdicao, setListasEmEdicao] = useState(null);
-    const [filmesEmEdicao, setFilmesEmEdicao] = useState(null);
-    const [jogosEmEdicao, setJogosEmEdicao] = useState(null);
+    // Lista atualmente aberta
+    const [listaSelecionadaId, setListaSelecionadaId] = useState(null)
 
-    const [textoEdicaoL, setTextoEdicaoL] = useState("");
+    // Form para adicionar elemento dentro da lista aberta
+    const [textoNovoItem, setTextoNovoItem] = useState("")
+    const [notaNovoItem, setNotaNovoItem] = useState("")
 
-    const [textoEdicaoF, setTextoEdicaoF] = useState("");
-    const [notaEdicaoF, setNotaEdicaoF] = useState(0)
+    // Modal: editar nome da lista
+    const [modalListaVisivel, setModalListaVisivel] = useState(false)
+    const [listaEmEdicao, setListaEmEdicao] = useState(null)
+    const [nomeEdicaoLista, setNomeEdicaoLista] = useState("")
 
-    const [textoEdicaoJ, setTextoEdicaoJ] = useState("");
-    const [notaEdicaoJ, setNotaEdicaoJ] = useState(0)
+    // Modal: editar elemento (texto + nota)
+    const [modalItemVisivel, setModalItemVisivel] = useState(false)
+    const [itemEmEdicao, setItemEmEdicao] = useState(null)
+    const [textoEdicaoItem, setTextoEdicaoItem] = useState("")
+    const [notaEdicaoItem, setNotaEdicaoItem] = useState("")
 
-    //buscar listas
+    // Carregar listas salvas
     useEffect(() => {
         async function carregarListas() {
             try {
                 const listasSalvas = await AsyncStorage.getItem(CHAVE_STORAGE)
-
                 if (listasSalvas !== null) {
-                    setListas(JSON.parse(listasSalvas))
+                    const dados = JSON.parse(listasSalvas)
+                    // Normaliza dados antigos/incompletos para não quebrar a tela
+                    const normalizadas = dados.map((lista) => ({
+                        id: lista.id ?? Date.now().toString(),
+                        nome: lista.nome ?? lista.listaTexto ?? "Lista sem nome",
+                        itens: Array.isArray(lista.itens) ? lista.itens : [],
+                    }))
+                    setListas(normalizadas)
                 }
             } catch (erro) {
                 console.error("Erro ao carregar suas listas do storage:", erro)
@@ -67,285 +65,205 @@ export default function listaScreen() {
                 setCarregando(false)
             }
         }
-
-        if (carregarFilmes !== null) {
-            async function carregarFilmes() {
-                try {
-                    const filmesSalvos = await AsyncStorage.getItem(CHAVE_STORAGE)
-
-                    if (filmesSalvos !== null) {
-                        setListas(JSON.parse(filmesSalvos))
-                    }
-                } catch (erro) {
-                    console.error("Erro ao carregar sua lista de filmes no storage:", erro)
-                } finally {
-                    setCarregando(false)
-                }
-            }
-            carregarFilmes()
-        } else {
-            console.log("Não possui listas de filmes ainda")
-        }
-
-        if (carregarJogos !== null) {
-            async function carregarJogos() {
-                try {
-                    const jogosSalvos = await AsyncStorage.getItem(CHAVE_STORAGE)
-
-                    if (jogosSalvos !== null) {
-                        setListas(JSON.parse(jogosSalvos))
-                    }
-                } catch (erro) {
-                    console.error("Erro ao carregar seus jogos no storage:", erro)
-                } finally {
-                    setCarregando(false)
-                }
-            }
-            carregarJogos()
-        } else {
-            console.log("Não possui listas de jogos ainda")
-        }
         carregarListas()
+    }, [])
 
-    }, []) //Vai executar uma vez
-
-
-    //listas
+    // Salvar sempre que "listas" mudar
     useEffect(() => {
         if (carregando) return
 
-        AsyncStorage.setItem(CHAVE_STORAGE, JSON.stringify(listas)).catch((erro) => { console.error("Erro ao salvar lista no storage: ", erro) })
+        AsyncStorage.setItem(CHAVE_STORAGE, JSON.stringify(listas)).catch((erro) => {
+            console.error("Erro ao salvar listas no storage:", erro)
+        })
+    }, [listas, carregando])
 
-    }, [listas, carregando]) //toda vez (listas)
+    const listaSelecionada = listas.find((lista) => lista.id === listaSelecionadaId) ?? null
 
+    // ---------- Listas ----------
 
-    //filmes
-    useEffect(() => {
-        if (carregando) return
-
-        AsyncStorage.setItem(CHAVE_STORAGE, JSON.stringify(filmes)).catch((erro) => { console.error("Erro ao salvar filme no storage: ", erro) })
-
-    }, [filmes, carregando]) //toda vez (filmes)
-
-
-    //jogos
-    useEffect(() => {
-        if (carregando) return
-
-        AsyncStorage.setItem(CHAVE_STORAGE, JSON.stringify(jogos)).catch((erro) => { console.error("Erro ao salvar jogo no storage: ", erro) })
-
-    }, [jogos, carregando]) //toda vez (jogos)
-
-
-    //adicionar
     function adicionarLista() {
-        const listaTexto = textoListaInput.trim()
-
-        if (listaTexto === "") return
+        const nomeFormatado = nomeNovaLista.trim()
+        if (nomeFormatado === "") return
 
         const novaLista = {
             id: Date.now().toString(),
-            listaTexto
+            nome: nomeFormatado,
+            itens: [],
         }
 
         setListas((listasAtuais) => [...listasAtuais, novaLista])
-
-        setTextoListaInput("")
+        setNomeNovaLista("")
     }
 
-    function adicionarFilme() {
-        const filmeTexto = textoFilmeInput.trim()
-        const filmeNota = notaFilmeInput.trim()
-
-        if (filmeTexto === "") return
-        if (filmeNota === 0) return
-
-        const novoFilme = {
-            id: Date.now().toString(),
-            filmeTexto,
-            filmeNota
-        }
-
-        setFilmes((filmesAtuais) => [...filmesAtuais, novoFilme])
-
-        setTextoFilmeInput("")
-        setNotaFilmeInput("")
-    }
-
-    function adicionarJogo() {
-        const jogoTexto = textoJogoInput.trim()
-        const jogoNota = notaJogoInput.trim()
-
-        if (jogoTexto === "") return
-        if (jogoNota === 0) return
-
-        const novoJogo = {
-            id: Date.now().toString(),
-            jogoTexto,
-            jogoNota
-        }
-
-        setJogos((jogosAtuais) => [...jogosAtuais, novoJogo])
-
-        setTextoJogoInput("")
-        setNotaJogoInput("")
-    }
-
-
-    //excluir geral
     function excluirTodasListas() {
         setListas([])
+        setListaSelecionadaId(null)
     }
 
-    function excluirTodosFilmes() {
-        setFilmes([])
-    }
-
-    function excluirTodosJogos() {
-        setJogos([])
-    }
-
-
-    //excluir unico
-    function excluirListas(id) {
+    function excluirLista(id) {
         setListas((listasAtuais) => listasAtuais.filter((lista) => lista.id !== id))
+        if (listaSelecionadaId === id) setListaSelecionadaId(null)
     }
 
-    function excluirFilme(id) {
-        setFilmes((filmesAtuais) => filmesAtuais.filter((filme) => filme.id !== id))
+    function abrirLista(id) {
+        setListaSelecionadaId(id)
     }
 
-    function excluirJogos(id) {
-        setJogos((jogosAtuais) => jogosAtuais.filter((jogo) => jogo.id !== id))
+    function voltarParaListas() {
+        setListaSelecionadaId(null)
+        setTextoNovoItem("")
+        setNotaNovoItem("")
     }
 
-
-    //Abrir modal
-    function abrirModalEditarL(listas) {
-        setListasEmEdicao(listas);
-        setTextoEdicaoL(listas.listaTexto);
-        setModalVisivel(true);
+    function abrirModalEditarLista(lista) {
+        setListaEmEdicao(lista)
+        setNomeEdicaoLista(lista.nome)
+        setModalListaVisivel(true)
     }
 
-    function abrirModalEditarF(filmes) {
-        setFilmesEmEdicao(filmes);
-        setTextoEdicaoF(filmes.filmeTexto);
-        setNotaEdicaoF(filmes.notaEdicao)
-        setModalVisivel(true);
+    function fecharModalLista() {
+        setModalListaVisivel(false)
+        setListaEmEdicao(null)
+        setNomeEdicaoLista("")
     }
 
-    function abrirModalEditarJ(jogos) {
-        setJogosEmEdicao(jogos);
-        setTextoEdicaoJ(jogos.textoEdicao);
-        setNotaEdicaoJ(jogos.notaEdicao)
-        setModalVisivel(true);
-    }
-
-
-    //Fechar modal
-    function fecharModal() {
-        setModalVisivel(false);
-
-        setListasEmEdicao(null);
-        setFilmesEmEdicao(null);
-        setJogosEmEdicao(null);
-
-        setTextoEdicaoL("");
-
-        setTextoEdicaoF("");
-        setNotaEdicaoF(0)
-
-        setTextoEdicaoJ("");
-        setNotaEdicaoJ(0)
-    }
-
-
-    //Salvar o texto alterado na lista
-    function confirmarEdicaoL() {
-        const textoFormatadoL = textoEdicaoL.trim();
-        if (textoFormatadoL === "" || !listasEmEdicao) return;
+    function confirmarEdicaoLista() {
+        const nomeFormatado = nomeEdicaoLista.trim()
+        if (nomeFormatado === "" || !listaEmEdicao) return
 
         setListas((listasAtuais) =>
-            listasAtuais.map((listas) =>
-                listas.id === listasEmEdicao.id
-                    ? { ...listas, listaTexto: textoFormatadoL }
-                    : listas
+            listasAtuais.map((lista) =>
+                lista.id === listaEmEdicao.id ? { ...lista, nome: nomeFormatado } : lista
             )
-        );
-
-        fecharModal();
+        )
+        fecharModalLista()
     }
 
-    function confirmarEdicaoF() {
-        const textoFormatadoF = textoEdicaoF.trim();
-        if (textoFormatadoF === "" || !filmesEmEdicao) return;
+    // ---------- Elementos da lista aberta ----------
 
-        if (notaEdicaoF === 0 || !filmesEmEdicao) return;
+    function adicionarItem() {
+        const textoFormatado = textoNovoItem.trim()
+        if (textoFormatado === "" || !listaSelecionadaId) return
 
-        setFilmes((filmesAtuais) =>
-            filmesAtuais.map((filmes) =>
-                filmes.id === filmesEmEdicao.id
-                    ? { ...filmes, filmeTexto: textoFormatadoF }
-                    : filmes
+        let notaFormatada = null
+        if (notaNovoItem.trim() !== "") {
+            const numero = Number(notaNovoItem)
+            if (isNaN(numero)) return
+            notaFormatada = numero
+        }
+
+        const novoItem = {
+            id: Date.now().toString(),
+            texto: textoFormatado,
+            nota: notaFormatada,
+        }
+
+        setListas((listasAtuais) =>
+            listasAtuais.map((lista) =>
+                lista.id === listaSelecionadaId
+                    ? { ...lista, itens: [...lista.itens, novoItem] }
+                    : lista
             )
-        );
+        )
 
-        fecharModal();
+        setTextoNovoItem("")
+        setNotaNovoItem("")
     }
 
-    function confirmarEdicaoJ() {
-        const textoFormatadoJ = textoEdicaoJ.trim();
-        if (textoFormatadoJ === "" || !jogosEmEdicao) return;
-
-        if (notaEdicaoJ === 0 || !jogosEmEdicao) return;
-
-        setJogos((jogosAtuais) =>
-            jogosAtuais.map((jogos) =>
-                jogos.id === jogosEmEdicao.id
-                    ? { ...jogos, jogoTexto: textoFormatadoJ }
-                    : jogos
+    function excluirTodosItens() {
+        if (!listaSelecionadaId) return
+        setListas((listasAtuais) =>
+            listasAtuais.map((lista) =>
+                lista.id === listaSelecionadaId ? { ...lista, itens: [] } : lista
             )
-        );
-
-        fecharModal();
+        )
     }
+
+    function excluirItem(itemId) {
+        if (!listaSelecionadaId) return
+        setListas((listasAtuais) =>
+            listasAtuais.map((lista) =>
+                lista.id === listaSelecionadaId
+                    ? { ...lista, itens: lista.itens.filter((item) => item.id !== itemId) }
+                    : lista
+            )
+        )
+    }
+
+    function abrirModalEditarItem(item) {
+        setItemEmEdicao(item)
+        setTextoEdicaoItem(item.texto)
+        setNotaEdicaoItem(item.nota === null || item.nota === undefined ? "" : String(item.nota))
+        setModalItemVisivel(true)
+    }
+
+    function fecharModalItem() {
+        setModalItemVisivel(false)
+        setItemEmEdicao(null)
+        setTextoEdicaoItem("")
+        setNotaEdicaoItem("")
+    }
+
+    function confirmarEdicaoItem() {
+        const textoFormatado = textoEdicaoItem.trim()
+        if (textoFormatado === "" || !itemEmEdicao) return
+
+        let notaFormatada = null
+        if (notaEdicaoItem.trim() !== "") {
+            const numero = Number(notaEdicaoItem)
+            if (isNaN(numero)) return
+            notaFormatada = numero
+        }
+
+        setListas((listasAtuais) =>
+            listasAtuais.map((lista) =>
+                lista.id === listaSelecionadaId
+                    ? {
+                          ...lista,
+                          itens: lista.itens.map((item) =>
+                              item.id === itemEmEdicao.id
+                                  ? { ...item, texto: textoFormatado, nota: notaFormatada }
+                                  : item
+                          ),
+                      }
+                    : lista
+            )
+        )
+
+        fecharModalItem()
+    }
+
+    // ---------- Render ----------
 
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-            {/* Listas */}
+            {/* Modal: editar nome da lista */}
             <Modal
-                visible={modalVisivel}
+                visible={modalListaVisivel}
                 transparent={true}
                 animationType="fade"
-                onRequestClose={fecharModal}
+                onRequestClose={fecharModalLista}
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitulo}>Editar Listas</Text>
+                        <Text style={styles.modalTitulo}>Editar Lista</Text>
 
                         <TextInput
                             style={styles.inputModal}
-                            value={textoEdicaoL}
-                            onChangeText={setTextoEdicaoL}
+                            value={nomeEdicaoLista}
+                            onChangeText={setNomeEdicaoLista}
                             placeholder="Novo nome da lista..."
                             autoFocus
                         />
 
                         <View style={styles.modalBotoes}>
-                            <TouchableOpacity
-                                style={[styles.botaoModal, styles.botaoCancelar]}
-                                onPress={fecharModal}
-                            >
+                            <TouchableOpacity style={[styles.botaoModal, styles.botaoCancelar]} onPress={fecharModalLista}>
                                 <Text style={styles.textoBotaoModal}>Cancelar</Text>
                             </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.botaoModal, styles.botaoSalvar]}
-                                onPress={confirmarEdicaoL}
-                            >
+                            <TouchableOpacity style={[styles.botaoModal, styles.botaoSalvar]} onPress={confirmarEdicaoLista}>
                                 <Text style={styles.textoBotaoModal}>Confirmar</Text>
                             </TouchableOpacity>
                         </View>
@@ -353,233 +271,137 @@ export default function listaScreen() {
                 </View>
             </Modal>
 
-            {/* Filmes */}
-            < Modal
-                visible={modalVisivel}
+            {/* Modal: editar elemento (texto + nota) */}
+            <Modal
+                visible={modalItemVisivel}
                 transparent={true}
                 animationType="fade"
-                onRequestClose={fecharModal}
+                onRequestClose={fecharModalItem}
             >
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitulo}>Editar Filmes</Text>
+                        <Text style={styles.modalTitulo}>Editar Elemento</Text>
 
                         <TextInput
                             style={styles.inputModal}
-                            value={textoEdicaoF}
-                            onChangeText={setTextoEdicaoF}
-                            placeholder="Novo nome do Filme..."
+                            value={textoEdicaoItem}
+                            onChangeText={setTextoEdicaoItem}
+                            placeholder="Nome do elemento..."
                             autoFocus
                         />
 
+                        <TextInput
+                            style={styles.inputModal}
+                            value={notaEdicaoItem}
+                            onChangeText={setNotaEdicaoItem}
+                            placeholder="Nota (opcional)"
+                            keyboardType="numeric"
+                        />
+
                         <View style={styles.modalBotoes}>
-                            <TouchableOpacity
-                                style={[styles.botaoModal, styles.botaoCancelar]}
-                                onPress={fecharModal}
-                            >
+                            <TouchableOpacity style={[styles.botaoModal, styles.botaoCancelar]} onPress={fecharModalItem}>
                                 <Text style={styles.textoBotaoModal}>Cancelar</Text>
                             </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.botaoModal, styles.botaoSalvar]}
-                                onPress={confirmarEdicaoF}
-                            >
+                            <TouchableOpacity style={[styles.botaoModal, styles.botaoSalvar]} onPress={confirmarEdicaoItem}>
                                 <Text style={styles.textoBotaoModal}>Confirmar</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 </View>
-            </Modal >
+            </Modal>
 
-            {/* Jogos */}
-            < Modal
-                visible={modalVisivel}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={fecharModal}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContainer}>
-                        <Text style={styles.modalTitulo}>Editar Jogos</Text>
+            {listaSelecionada === null ? (
+                <>
+                    {/* ---------- Tela de Listas ---------- */}
+                    <Text style={styles.titulo}>Minhas Listas</Text>
 
+                    <View style={styles.formulario}>
                         <TextInput
-                            style={styles.inputModal}
-                            value={textoEdicaoJ}
-                            onChangeText={setTextoEdicaoJ}
-                            placeholder="Novo nome do Jogo..."
-                            autoFocus
+                            style={styles.input}
+                            placeholder="Nome da nova lista (ex: Jogos)"
+                            value={nomeNovaLista}
+                            onChangeText={setNomeNovaLista}
+                            onSubmitEditing={adicionarLista}
+                            returnKeyType="done"
                         />
-
-                        <View style={styles.modalBotoes}>
-                            <TouchableOpacity
-                                style={[styles.botaoModal, styles.botaoCancelar]}
-                                onPress={fecharModal}
-                            >
-                                <Text style={styles.textoBotaoModal}>Cancelar</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.botaoModal, styles.botaoSalvar]}
-                                onPress={confirmarEdicaoJ}
-                            >
-                                <Text style={styles.textoBotaoModal}>Confirmar</Text>
-                            </TouchableOpacity>
-                        </View>
+                        <TouchableOpacity style={styles.botaoAdicionar} onPress={adicionarLista}>
+                            <Text style={styles.textoBotaoAdicionar}>Adicionar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.botaoExcluirTudo} onPress={excluirTodasListas}>
+                            <Text style={styles.textoBotaoExcluirTudo}>Limpar</Text>
+                        </TouchableOpacity>
                     </View>
-                </View>
-            </Modal >
 
-            {/* Listas */}
-            <Text style={styles.titulo}>Listas</Text>
-
-            <View style={styles.formulario}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Digite uma nova lista"
-                    value={textoListaInput}
-                    onChangeText={setTextoListaInput}
-                    onSubmitEditing={adicionarLista}
-                    returnType="done"
-                />
-
-                <TouchableOpacity
-                    style={styles.botaoAdicionar}
-                    onPress={adicionarLista}
-                >
-                    <Text style={styles.textoBotaoAdicionar}>Adicionar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.botaoCancelar}
-                    onPress={excluirTodasListas}
-                >
-                    <Text style={styles.textoBotaoExcluirTudo}>Limpar</Text>
-                </TouchableOpacity>
-            </View>
-
-
-            {/* Filmes */}
-            <Text style={styles.titulo}>Filmes</Text>
-
-            <View style={styles.formulario}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Digite um novo filme"
-                    value={textoFilmeInput}
-                    onChangeText={setTextoFilmeInput}
-                    onSubmitEditing={adicionarFilme}
-                    returnType="done"
-                />
-
-                <TouchableOpacity
-                    style={styles.botaoAdicionar}
-                    onPress={adicionarFilme}
-                >
-                    <Text style={styles.textoBotaoAdicionar}>Adicionar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.botaoCancelar}
-                    onPress={excluirTodosFilmes}
-                >
-                    <Text style={styles.textoBotaoExcluirTudo}>Limpar</Text>
-                </TouchableOpacity>
-            </View>
-
-
-            {/* Jogos */}
-            <Text style={styles.titulo}>Jogos</Text>
-
-            <View style={styles.formulario}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Digite um novo jogo"
-                    value={textoJogoInput}
-                    onChangeText={setTextoJogoInput}
-                    onSubmitEditing={adicionarJogo}
-                    returnType="done"
-                />
-
-                <TouchableOpacity
-                    style={styles.botaoAdicionar}
-                    onPress={adicionarJogo}
-                >
-                    <Text style={styles.textoBotaoAdicionar}>Adicionar</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.botaoCancelar}
-                    onPress={excluirTodosJogos}
-                >
-                    <Text style={styles.textoBotaoExcluirTudo}>Limpar</Text>
-                </TouchableOpacity>
-            </View>
-
-
-            {/* Listas */}
-            <FlatList 
-                data={listas}
-                keyExtractor={(lista) => lista.id}
-                renderItem={({ item }) => (
-                    <ListaItem 
-                        lista={item}
-                        aoExcluirL={excluirListas}
-                        aoEditarL={abrirModalEditarL}
+                    <FlatList
+                        data={listas}
+                        keyExtractor={(lista) => lista.id}
+                        renderItem={({ item }) => (
+                            <ListaItem
+                                lista={item}
+                                aoAbrir={abrirLista}
+                                aoEditar={abrirModalEditarLista}
+                                aoExcluir={excluirLista}
+                            />
+                        )}
+                        ListEmptyComponent={
+                            <Text style={styles.listaVazia}>Nenhuma lista cadastrada ainda</Text>
+                        }
+                        contentContainerStyle={styles.listaConteudo}
                     />
-                )}
+                </>
+            ) : (
+                <>
+                    {/* ---------- Tela de Elementos da lista aberta ---------- */}
+                    <TouchableOpacity style={styles.botaoVoltar} onPress={voltarParaListas}>
+                        <Text style={styles.textoBotaoVoltar}>{"< Voltar"}</Text>
+                    </TouchableOpacity>
 
-                ListaEmptyComponent={
-                    <Text style={styles.listaVazia}>
-                        Nenhuma lista cadastrada ainda
-                    </Text>
-                }
-                contentContainerStyle={styles.listaConteudo}
-            />
+                    <Text style={styles.titulo}>{listaSelecionada.nome}</Text>
 
-            
-            {/* Filmes */}
-            <FlatList 
-                data={filmes}
-                keyExtractor={(filme) => filme.id}
-                renderItem={({ item }) => (
-                    <FilmesItem 
-                        filme={item}
-                        aoExcluirF={excluirFilme}
-                        aoEditarF={abrirModalEditarF}
+                    <View style={styles.formulario}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nome do elemento"
+                            value={textoNovoItem}
+                            onChangeText={setTextoNovoItem}
+                            returnKeyType="next"
+                        />
+                        <TextInput
+                            style={styles.inputNota}
+                            placeholder="Nota"
+                            value={notaNovoItem}
+                            onChangeText={setNotaNovoItem}
+                            onSubmitEditing={adicionarItem}
+                            keyboardType="numeric"
+                            returnKeyType="done"
+                        />
+                    </View>
+
+                    <View style={styles.formulario}>
+                        <TouchableOpacity style={styles.botaoAdicionar} onPress={adicionarItem}>
+                            <Text style={styles.textoBotaoAdicionar}>Adicionar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.botaoExcluirTudo} onPress={excluirTodosItens}>
+                            <Text style={styles.textoBotaoExcluirTudo}>Limpar</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <FlatList
+                        data={listaSelecionada.itens}
+                        keyExtractor={(item) => item.id}
+                        renderItem={({ item }) => (
+                            <ElementoItem item={item} aoExcluir={excluirItem} aoEditar={abrirModalEditarItem} />
+                        )}
+                        ListEmptyComponent={
+                            <Text style={styles.listaVazia}>Nenhum elemento cadastrado ainda</Text>
+                        }
+                        contentContainerStyle={styles.listaConteudo}
                     />
-                )}
-
-                ListaEmptyComponent={
-                    <Text style={styles.listaVazia}>
-                        Nenhuma lista cadastrada ainda
-                    </Text>
-                }
-                contentContainerStyle={styles.listaConteudo}
-            />
-
-
-            {/* Jogos */}
-            <FlatList 
-                data={jogos}
-                keyExtractor={(jogo) => jogo.id}
-                renderItem={({ item }) => (
-                    <JogosItem 
-                        jogo={item}
-                        aoExcluirJ={excluirJogos}
-                        aoEditarJ={abrirModalEditarJ}
-                    />
-                )}
-
-                ListaEmptyComponent={
-                    <Text style={styles.listaVazia}>
-                        Nenhum filme cadastrado ainda
-                    </Text>
-                }
-                contentContainerStyle={styles.listaConteudo}
-            />
+                </>
+            )}
         </KeyboardAvoidingView>
-    );
-};
+    )
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -597,6 +419,7 @@ const styles = StyleSheet.create({
     formulario: {
         flexDirection: "row",
         marginBottom: 16,
+        alignItems: "center",
     },
     input: {
         flex: 1,
@@ -608,15 +431,47 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         marginRight: 8,
     },
+    inputNota: {
+        width: 80,
+        backgroundColor: "#fff",
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
     botaoAdicionar: {
         backgroundColor: "#2e86de",
         borderRadius: 8,
         paddingHorizontal: 16,
         justifyContent: "center",
+        marginRight: 8,
+        paddingVertical: 10,
     },
     textoBotaoAdicionar: {
         color: "#fff",
         fontWeight: "bold",
+    },
+    botaoExcluirTudo: {
+        backgroundColor: "#e74c3c",
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 8,
+        justifyContent: "center",
+    },
+    textoBotaoExcluirTudo: {
+        color: "#fff",
+        fontWeight: "bold",
+        fontSize: 12,
+    },
+    botaoVoltar: {
+        alignSelf: "flex-start",
+        marginBottom: 8,
+    },
+    textoBotaoVoltar: {
+        color: "#2e86de",
+        fontWeight: "bold",
+        fontSize: 15,
     },
     listaConteudo: {
         paddingBottom: 20,
@@ -626,22 +481,6 @@ const styles = StyleSheet.create({
         color: "#888",
         marginTop: 24,
     },
-
-    //atividade
-    botaoExcluirTudo: {
-        backgroundColor: '#e74c3c',
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 6,
-        justifyContent: "center"
-    },
-    textoBotaoExcluirTudo: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 12,
-    },
-
-    // Estilos do Modal
     modalOverlay: {
         flex: 1,
         backgroundColor: "rgba(0,0,0,0.5)",
@@ -669,11 +508,12 @@ const styles = StyleSheet.create({
         borderColor: "#ccc",
         borderRadius: 6,
         padding: 10,
-        marginBottom: 16,
+        marginBottom: 12,
     },
     modalBotoes: {
         flexDirection: "row",
         justifyContent: "flex-end",
+        marginTop: 4,
     },
     botaoModal: {
         paddingVertical: 8,
@@ -691,4 +531,4 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontWeight: "bold",
     },
-});
+})
