@@ -1,96 +1,18 @@
-import React, {
-    useCallback,
-    useState
-} from 'react';
+import React from 'react';
 
 import {
     View,
     Text,
     StyleSheet,
-    FlatList,
-    TouchableOpacity,
-    Alert
+    TouchableOpacity
 } from 'react-native';
-
-import {
-    useFocusEffect
-} from '@react-navigation/native';
-
-import RegistroCard from '../components/RegistroCard';
-
-import {
-    buscarRegistros,
-    excluirRegistro
-} from '../services/storage';
 
 
 export default function HomeScreen({
     navigation
 }) {
 
-    const [registros, setRegistros] = useState([]);
-
-
-    async function carregarRegistros() {
-
-        const dados = await buscarRegistros();
-
-        setRegistros(dados);
-    }
-
-
-    useFocusEffect(
-        useCallback(() => {
-
-            carregarRegistros();
-
-        }, [])
-    );
-
-
-    function editarRegistro(registro) {
-
-        navigation.navigate(
-            'Cadastro',
-            {
-                registro: registro
-            }
-        );
-    }
-
-
-    function confirmarExclusao(id) {
-
-        Alert.alert(
-            'Excluir registro',
-            'Tem certeza que deseja excluir este registro?',
-            [
-                {
-                    text: 'Cancelar',
-                    style: 'cancel'
-                },
-
-                {
-                    text: 'Excluir',
-                    style: 'destructive',
-
-                    onPress: async () => {
-
-                        const registrosAtualizados =
-                            await excluirRegistro(id);
-
-                        setRegistros(
-                            registrosAtualizados
-                        );
-                    }
-                }
-            ]
-        );
-    }
-
-
     return (
-
         <View style={styles.container}>
 
             <Text style={styles.titulo}>
@@ -98,60 +20,94 @@ export default function HomeScreen({
             </Text>
 
             <Text style={styles.subtitulo}>
-                Registre suas experiências com jogos
+                Organize seus jogos e registre suas experiências
             </Text>
 
 
+            {/* LISTA DE JOGOS */}
             <TouchableOpacity
-                style={styles.botaoNovo}
+                style={styles.card}
                 onPress={() =>
-                    navigation.navigate('Cadastro')
+                    navigation.navigate('Lista')
                 }
             >
 
-                <Text style={styles.textoBotaoNovo}>
-                    + Novo Registro
+                <Text style={styles.icone}>
+                    🎮
                 </Text>
+
+                <View style={styles.textos}>
+
+                    <Text style={styles.tituloCard}>
+                        Lista de Jogos
+                    </Text>
+
+                    <Text style={styles.descricao}>
+                        Veja os jogos cadastrados e adicione
+                        novos jogos.
+                    </Text>
+
+                </View>
 
             </TouchableOpacity>
 
 
-            <FlatList
-
-                data={registros}
-
-                keyExtractor={(item) =>
-                    item.id.toString()
+            {/* COLEÇÃO */}
+            <TouchableOpacity
+                style={styles.card}
+                onPress={() =>
+                    navigation.navigate('Colecao')
                 }
+            >
 
-                renderItem={({ item }) => (
+                <Text style={styles.icone}>
+                    🕹️
+                </Text>
 
-                    <RegistroCard
-                        registro={item}
-                        onEditar={editarRegistro}
-                        onExcluir={confirmarExclusao}
-                    />
+                <View style={styles.textos}>
 
-                )}
-
-                ListEmptyComponent={
-
-                    <Text style={styles.vazio}>
-                        Nenhum registro encontrado.
+                    <Text style={styles.tituloCard}>
+                        Minha Coleção
                     </Text>
 
-                }
+                    <Text style={styles.descricao}>
+                        Gerencie os jogos que fazem parte
+                        da sua coleção.
+                    </Text>
 
-                contentContainerStyle={
-                    registros.length === 0
-                        ? styles.listaVazia
-                        : styles.lista
-                }
+                </View>
 
-            />
+            </TouchableOpacity>
+
+
+            {/* DIÁRIO */}
+            <TouchableOpacity
+                style={styles.card}
+                onPress={() =>
+                    navigation.navigate('Diario')
+                }
+            >
+
+                <Text style={styles.icone}>
+                    📖
+                </Text>
+
+                <View style={styles.textos}>
+
+                    <Text style={styles.tituloCard}>
+                        Diário de Jogos
+                    </Text>
+
+                    <Text style={styles.descricao}>
+                        Registre sua experiência e sua opinião
+                        sobre os jogos.
+                    </Text>
+
+                </View>
+
+            </TouchableOpacity>
 
         </View>
-
     );
 }
 
@@ -162,50 +118,62 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F2F2F2',
         padding: 20,
-        paddingTop: 50
+        paddingTop: 60
     },
 
     titulo: {
-        fontSize: 30,
+        fontSize: 32,
         fontWeight: 'bold',
-        textAlign: 'center'
+        textAlign: 'center',
+        marginBottom: 10
     },
 
     subtitulo: {
         fontSize: 15,
-        textAlign: 'center',
         color: '#666666',
-        marginTop: 5,
-        marginBottom: 20
-    },
-
-    botaoNovo: {
-        backgroundColor: '#6C5CE7',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 20
-    },
-
-    textoBotaoNovo: {
-        color: '#FFFFFF',
         textAlign: 'center',
-        fontSize: 17,
-        fontWeight: 'bold'
+        marginBottom: 35
     },
 
-    lista: {
-        paddingBottom: 20
+    card: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        padding: 20,
+        marginBottom: 18,
+
+        flexDirection: 'row',
+        alignItems: 'center',
+
+        elevation: 4,
+
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 4
     },
 
-    listaVazia: {
-        flexGrow: 1,
-        justifyContent: 'center'
+    icone: {
+        fontSize: 42,
+        marginRight: 18
     },
 
-    vazio: {
-        textAlign: 'center',
-        fontSize: 17,
-        color: '#777777'
+    textos: {
+        flex: 1
+    },
+
+    tituloCard: {
+        fontSize: 21,
+        fontWeight: 'bold',
+        marginBottom: 5
+    },
+
+    descricao: {
+        fontSize: 14,
+        color: '#666666',
+        lineHeight: 20
     }
 
 });
