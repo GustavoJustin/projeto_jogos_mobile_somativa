@@ -39,11 +39,11 @@ export default function diario_screen({
             <View style={styles.secao}>
 
                 <Text style={styles.tituloSecao}>
-                    💭 Minha opinião
+                    💭 Minha experiencia 
                 </Text>
 
                 <Text style={styles.texto}>
-                    {registro.opiniao}
+                    {registro.experiencia}
                 </Text>
 
             </View>
