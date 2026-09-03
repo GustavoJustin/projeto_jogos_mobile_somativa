@@ -21,21 +21,19 @@ import RegistroCard from '../components/RegistroCard';
 import {
     buscarRegistros,
     excluirRegistro
-} from '../services/diarioStorage';
+} from '../services/storage';
 
 
-export default function DiarioScreen({
+export default function HomeScreen({
     navigation
 }) {
 
-    const [registros, setRegistros] =
-        useState([]);
+    const [registros, setRegistros] = useState([]);
 
 
     async function carregarRegistros() {
 
-        const dados =
-            await buscarRegistros();
+        const dados = await buscarRegistros();
 
         setRegistros(dados);
     }
@@ -53,7 +51,7 @@ export default function DiarioScreen({
     function editarRegistro(registro) {
 
         navigation.navigate(
-            'cadastro_diario_screen',
+            'Cadastro',
             {
                 registro: registro
             }
@@ -65,9 +63,7 @@ export default function DiarioScreen({
 
         Alert.alert(
             'Excluir registro',
-
             'Tem certeza que deseja excluir este registro?',
-
             [
                 {
                     text: 'Cancelar',
@@ -95,34 +91,67 @@ export default function DiarioScreen({
 
     return (
 
-         <View style={styles.container}>
+        <View style={styles.container}>
 
-        <Text style={styles.titulo}>
-            📖 Diário de Jogos
-        </Text>
-
-        <Text style={styles.subtitulo}>
-            Registre suas experiências com jogos
-        </Text>
-
-        <TouchableOpacity
-            style={styles.botaoNovo}
-            onPress={() =>
-                navigation.navigate(
-                    'CadastroDiario'
-                )
-            }
-        >
-
-            <Text style={styles.textoBotao}>
-                + Novo Registro
+            <Text style={styles.titulo}>
+                🎮 Diário Gamer
             </Text>
 
-        </TouchableOpacity>
+            <Text style={styles.subtitulo}>
+                Registre suas experiências com jogos
+            </Text>
 
-        {/* restante da FlatList */}
 
-    </View>
+            <TouchableOpacity
+                style={styles.botaoNovo}
+                onPress={() =>
+                    navigation.navigate('Cadastro')
+                }
+            >
+
+                <Text style={styles.textoBotaoNovo}>
+                    + Novo Registro
+                </Text>
+
+            </TouchableOpacity>
+
+
+            <FlatList
+
+                data={registros}
+
+                keyExtractor={(item) =>
+                    item.id.toString()
+                }
+
+                renderItem={({ item }) => (
+
+                    <RegistroCard
+                        registro={item}
+                        onEditar={editarRegistro}
+                        onExcluir={confirmarExclusao}
+                    />
+
+                )}
+
+                ListEmptyComponent={
+
+                    <Text style={styles.vazio}>
+                        Nenhum registro encontrado.
+                    </Text>
+
+                }
+
+                contentContainerStyle={
+                    registros.length === 0
+                        ? styles.listaVazia
+                        : styles.lista
+                }
+
+            />
+
+        </View>
+
     );
 }
 
@@ -133,11 +162,11 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F2F2F2',
         padding: 20,
-        paddingTop: 30
+        paddingTop: 50
     },
 
     titulo: {
-        fontSize: 28,
+        fontSize: 30,
         fontWeight: 'bold',
         textAlign: 'center'
     },
@@ -157,7 +186,7 @@ const styles = StyleSheet.create({
         marginBottom: 20
     },
 
-    textoBotao: {
+    textoBotaoNovo: {
         color: '#FFFFFF',
         textAlign: 'center',
         fontSize: 17,
