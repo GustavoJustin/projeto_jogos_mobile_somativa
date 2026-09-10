@@ -44,35 +44,7 @@ export default function HomeScreen({ navigation }) {
                 </View>
 
             </TouchableOpacity>
-
-
-            {/* COLEÇÃO */}
-            <TouchableOpacity
-                style={styles.card}
-                onPress={() =>
-                    navigation.navigate('Colecao')
-                }
-            >
-
-                <Text style={styles.icone}>
-                    🕹️
-                </Text>
-
-                <View style={styles.textos}>
-
-                    <Text style={styles.tituloCard}>
-                        Minha Coleção
-                    </Text>
-
-                    <Text style={styles.descricao}>
-                        Gerencie os jogos que fazem parte
-                        da sua coleção.
-                    </Text>
-
-                </View>
-
-            </TouchableOpacity>
-
+            
 
             {/* DIÁRIO */}
             <TouchableOpacity

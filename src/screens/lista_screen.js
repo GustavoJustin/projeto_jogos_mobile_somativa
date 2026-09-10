@@ -372,7 +372,7 @@ export default function ListaScreen() {
                     <View style={styles.formulario}>
                         <TextInput
                             style={styles.input}
-                            placeholder="Nome do elemento"
+                            placeholder="Nome do jogo"
                             value={textoNovoItem}
                             onChangeText={setTextoNovoItem}
                             returnKeyType="next"
