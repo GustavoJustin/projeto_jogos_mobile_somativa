@@ -236,6 +236,7 @@ export default function ListaScreen() {
     // ---------- Render ----------
 
     return (
+        // envelopamento para impedir que o teclado cubra os campos de texto da tela
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -251,6 +252,7 @@ export default function ListaScreen() {
                     <View style={styles.modalContainer}>
                         <Text style={styles.modalTitulo}>Editar Lista</Text>
 
+                        {/* Campo para alterar a lista */}
                         <TextInput
                             style={styles.inputModal}
                             value={nomeEdicaoLista}
@@ -259,6 +261,7 @@ export default function ListaScreen() {
                             autoFocus
                         />
 
+                        {/* botao para confirmar e cancelar */}
                         <View style={styles.modalBotoes}>
                             <TouchableOpacity style={[styles.botaoModal, styles.botaoCancelar]} onPress={fecharModalLista}>
                                 <Text style={styles.textoBotaoModal}>Cancelar</Text>
@@ -282,6 +285,7 @@ export default function ListaScreen() {
                     <View style={styles.modalContainer}>
                         <Text style={styles.modalTitulo}>Editar Elemento</Text>
 
+                        {/* input para o novo elemento (nota)*/}
                         <TextInput
                             style={styles.inputModal}
                             value={textoEdicaoItem}
@@ -290,6 +294,7 @@ export default function ListaScreen() {
                             autoFocus
                         />
 
+                        {/* input para o novo elemto (nota) */}
                         <TextInput
                             style={styles.inputModal}
                             value={notaEdicaoItem}
@@ -298,6 +303,7 @@ export default function ListaScreen() {
                             keyboardType="numeric"
                         />
 
+                        {/* botoes do modal */}
                         <View style={styles.modalBotoes}>
                             <TouchableOpacity style={[styles.botaoModal, styles.botaoCancelar]} onPress={fecharModalItem}>
                                 <Text style={styles.textoBotaoModal}>Cancelar</Text>
@@ -310,11 +316,13 @@ export default function ListaScreen() {
                 </View>
             </Modal>
 
+            {/* mostra a tela dos elementos da lista com uma condicao */}
             {listaSelecionada === null ? (
                 <>
                     {/* ---------- Tela de Listas ---------- */}
                     <Text style={styles.titulo}>Minhas Listas</Text>
 
+                    {/* formulario para criar listas e excluir todas elas */}
                     <View style={styles.formulario}>
                         <TextInput
                             style={styles.input}
@@ -332,6 +340,7 @@ export default function ListaScreen() {
                         </TouchableOpacity>
                     </View>
 
+                    {/* exibe as listas dentro das listas */}
                     <FlatList
                         data={listas}
                         keyExtractor={(lista) => lista.id}
@@ -352,16 +361,18 @@ export default function ListaScreen() {
             ) : (
                 <>
                     {/* ---------- Tela de Elementos da lista aberta ---------- */}
+                    {/* botao para voltar para a lista */}
                     <TouchableOpacity style={styles.botaoVoltar} onPress={voltarParaListas}>
                         <Text style={styles.textoBotaoVoltar}>{"< Voltar"}</Text>
                     </TouchableOpacity>
 
                     <Text style={styles.titulo}>{listaSelecionada.nome}</Text>
 
+                    {/* adicionar um novo elemento com nota */}
                     <View style={styles.formulario}>
                         <TextInput
                             style={styles.input}
-                            placeholder="Nome do elemento"
+                            placeholder="Nome do jogo"
                             value={textoNovoItem}
                             onChangeText={setTextoNovoItem}
                             returnKeyType="next"
@@ -386,6 +397,7 @@ export default function ListaScreen() {
                         </TouchableOpacity>
                     </View>
 
+                    {/* mostra os elementos da lista */}
                     <FlatList
                         data={listaSelecionada.itens}
                         keyExtractor={(item) => item.id}
