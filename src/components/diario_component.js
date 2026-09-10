@@ -1,169 +1,44 @@
 import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
-import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity
-} from 'react-native';
+export default function DiarioComponent({ registro, onExcluir }) {
+  return (
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.jogo}>🎮 {registro.jogo}</Text>
+        <Text style={styles.nota}>⭐ {registro.nota}/10</Text>
+      </View>
 
-export default function diario_screen({
-    registro,
-    onEditar,
-    onExcluir
-}) {
+      <Text style={styles.data}>📅 {registro.data}</Text>
 
-    return (
-        <View style={styles.card}>
+      <View style={styles.secao}>
+        <Text style={styles.tituloSecao}>📝 Descrição</Text>
+        <Text style={styles.texto}>{registro.descricao}</Text>
+      </View>
 
-            <Text style={styles.jogo}>
-                🎮 {registro.jogo}
-            </Text>
-
-            <Text style={styles.data}>
-                📅 {registro.data}
-            </Text>
-
-            <View style={styles.secao}>
-
-                <Text style={styles.tituloSecao}>
-                    📝 Descrição
-                </Text>
-
-                <Text style={styles.texto}>
-                    {registro.descricao}
-                </Text>
-
-            </View>
-
-            <View style={styles.secao}>
-
-                <Text style={styles.tituloSecao}>
-                    💭 Minha experiencia 
-                </Text>
-
-                <Text style={styles.texto}>
-                    {registro.experiencia}
-                </Text>
-
-            </View>
-
-            <View style={styles.notaContainer}>
-
-                <Text style={styles.nota}>
-                    ⭐ Nota: {registro.nota}/5
-                </Text>
-
-            </View>
-
-            <View style={styles.botoes}>
-
-                <TouchableOpacity
-                    style={styles.botaoEditar}
-                    onPress={() => onEditar(registro)}
-                >
-                    <Text style={styles.textoBotao}>
-                        ✏️ Editar
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={styles.botaoExcluir}
-                    onPress={() => onExcluir(registro.id)}
-                >
-                    <Text style={styles.textoBotao}>
-                        🗑️ Excluir
-                    </Text>
-                </TouchableOpacity>
-
-            </View>
-
+      {registro.comentario ? (
+        <View style={styles.secao}>
+          <Text style={styles.tituloSecao}>💬 Comentário</Text>
+          <Text style={styles.texto}>{registro.comentario}</Text>
         </View>
-    );
+      ) : null}
+
+      <TouchableOpacity style={styles.btnExcluir} onPress={() => onExcluir(registro.id)}>
+        <Text style={styles.txtExcluir}>Excluir</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-
-    card: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 15,
-        padding: 16,
-        marginBottom: 15,
-
-        elevation: 4,
-
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2
-        },
-        shadowOpacity: 0.15,
-        shadowRadius: 4
-    },
-
-    jogo: {
-        fontSize: 21,
-        fontWeight: 'bold',
-        marginBottom: 6
-    },
-
-    data: {
-        fontSize: 14,
-        color: '#666666',
-        marginBottom: 15
-    },
-
-    secao: {
-        marginBottom: 12
-    },
-
-    tituloSecao: {
-        fontSize: 15,
-        fontWeight: 'bold',
-        marginBottom: 4
-    },
-
-    texto: {
-        fontSize: 14,
-        color: '#444444',
-        lineHeight: 20
-    },
-
-    notaContainer: {
-        marginTop: 5,
-        marginBottom: 15
-    },
-
-    nota: {
-        fontSize: 17,
-        fontWeight: 'bold'
-    },
-
-    botoes: {
-        flexDirection: 'row',
-        justifyContent: 'space-between'
-    },
-
-    botaoEditar: {
-        backgroundColor: '#6C5CE7',
-        padding: 10,
-        borderRadius: 8,
-        flex: 1,
-        marginRight: 5
-    },
-
-    botaoExcluir: {
-        backgroundColor: '#E74C3C',
-        padding: 10,
-        borderRadius: 8,
-        flex: 1,
-        marginLeft: 5
-    },
-
-    textoBotao: {
-        color: '#FFFFFF',
-        textAlign: 'center',
-        fontWeight: 'bold'
-    }
-
+  card: { backgroundColor: '#1e1e2e', padding: 15, borderRadius: 10, marginBottom: 12 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  jogo: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  nota: { color: '#f1c40f', fontSize: 16, fontWeight: 'bold' },
+  data: { color: '#888', fontSize: 12, marginVertical: 4 },
+  secao: { marginTop: 8 },
+  tituloSecao: { color: '#a6adc8', fontSize: 14, fontWeight: 'bold' },
+  texto: { color: '#cdd6f4', fontSize: 14, marginTop: 2 },
+  btnExcluir: { marginTop: 10, alignSelf: 'flex-end' },
+  txtExcluir: { color: '#f38ba8', fontWeight: 'bold' }
 });

@@ -1,110 +1,37 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CHAVE_REGISTROS = '@diario_gamer:registros';
+const STORAGE_KEY = '@diario_jogos';
 
-export async function buscarRegistros() {
+export const diarioStorage = {
+  async buscarTodos() {
     try {
-        const dados = await AsyncStorage.getItem(
-            CHAVE_REGISTROS
-        );
-
-        if (dados) {
-            return JSON.parse(dados);
-        }
-
-        return [];
-
-    } catch (erro) {
-
-        console.log(
-            'Erro ao buscar registros:',
-            erro
-        );
-
-        return [];
+      const json = await AsyncStorage.getItem(STORAGE_KEY);
+      return json ? JSON.parse(json) : [];
+    } catch (e) {
+      console.error('Erro ao buscar diários', e);
+      return [];
     }
-}
+  },
 
-
-export async function salvarRegistros(registros) {
+  async salvar(novoRegistro) {
     try {
-
-        await AsyncStorage.setItem(
-            CHAVE_REGISTROS,
-            JSON.stringify(registros)
-        );
-
-    } catch (erro) {
-
-        console.log(
-            'Erro ao salvar registros:',
-            erro
-        );
+      const registros = await this.buscarTodos();
+      const atualizados = [...registros, { ...novoRegistro, id: Date.now().toString() }];
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(atualizados));
+      return atualizados;
+    } catch (e) {
+      console.error('Erro ao salvar diário', e);
     }
-}
+  },
 
-
-export async function adicionarRegistro(registro) {
-
-    const registros =
-        await buscarRegistros();
-
-    const novosRegistros = [
-        ...registros,
-        registro
-    ];
-
-    await salvarRegistros(
-        novosRegistros
-    );
-
-    return novosRegistros;
-}
-
-
-export async function atualizarRegistro(
-    registroAtualizado
-) {
-
-    const registros =
-        await buscarRegistros();
-
-    const novosRegistros = registros.map(
-        (registro) => {
-
-            if (
-                registro.id ===
-                registroAtualizado.id
-            ) {
-                return registroAtualizado;
-            }
-
-            return registro;
-        }
-    );
-
-    await salvarRegistros(
-        novosRegistros
-    );
-
-    return novosRegistros;
-}
-
-
-export async function excluirRegistro(id) {
-
-    const registros =
-        await buscarRegistros();
-
-    const novosRegistros =
-        registros.filter(
-            (registro) =>
-                registro.id !== id
-        );
-
-    await salvarRegistros(
-        novosRegistros
-    );
-
-    return novosRegistros;
-}
+  async excluir(id) {
+    try {
+      const registros = await this.buscarTodos();
+      const filtrados = registros.filter(item => item.id !== id);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(filtrados));
+      return filtrados;
+    } catch (e) {
+      console.error('Erro ao excluir diário', e);
+    }
+  }
+};
