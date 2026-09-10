@@ -7,7 +7,6 @@ import {
     View,
     Text,
     StyleSheet,
-    FlatList,
     TouchableOpacity,
     Alert
 } from 'react-native';
@@ -16,7 +15,6 @@ import {
     useFocusEffect
 } from '@react-navigation/native';
 
-import RegistroCard from '../components/RegistroCard';
 
 import {
     buscarRegistros,
@@ -53,7 +51,7 @@ export default function DiarioScreen({
     function editarRegistro(registro) {
 
         navigation.navigate(
-            'cadastro_diario_screen',
+            'CadastroDiarioScreen',
             {
                 registro: registro
             }
@@ -114,8 +112,8 @@ export default function DiarioScreen({
             }
         >
 
-            <Text style={styles.textoBotao}>
-                + Novo Registro
+            <Text style={styles.textoBotao} >
+                + Novo Registro    
             </Text>
 
         </TouchableOpacity>
